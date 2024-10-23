@@ -1,10 +1,12 @@
+import TelaCadastroVeiculos from "./telas/TelaCadastroVeiculos";
 
-function App() {
+
+const App = () => {
   return (
-    <div className="App">
-      
+    <div>
+      <TelaCadastroVeiculos />
     </div>
   );
-}
+};
 
 export default App;
