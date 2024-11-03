@@ -1,15 +1,12 @@
 import { Container } from "react-bootstrap";
-import Cabecalho from "./Cabecalho";
 import Menu from "./Menu";
 
-export default function Pagina (props) {
+export default function Pagina(props) {
+    console.log("Página renderizada"); 
     return (
         <Container>
-            <Cabecalho/>
-            <Menu/>
-            {
-                props.children
-            }
+            <Menu />
+            {props.children}
         </Container>
-    )
+    );
 }

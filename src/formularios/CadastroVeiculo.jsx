@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 
 const CadastroVeiculo = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +14,8 @@ const CadastroVeiculo = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,6 +50,23 @@ const CadastroVeiculo = () => {
     e.preventDefault();
     if (validate()) {
       console.log('Dados válidos:', formData);
+      // Exibe mensagem de sucesso e limpa o formulário
+      setSuccessMessage('Veículo cadastrado com sucesso!');
+      setErrorMessage('');
+      setFormData({
+        placa: '',
+        modelo: '',
+        marca: '',
+        anoFabricacao: '',
+        cor: '',
+        chassi: '',
+        renavam: '',
+        combustivel: ''
+      });
+    } else {
+      // Exibe mensagem de erro
+      setSuccessMessage('');
+      setErrorMessage('Por favor, corrija os erros no formulário antes de enviar.');
     }
   };
 
@@ -55,6 +74,9 @@ const CadastroVeiculo = () => {
     <Container>
       <Row className="justify-content-md-center">
         <Col md={6}>
+          {successMessage && <Alert variant="success">{successMessage}</Alert>}
+          {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
+
           <Form onSubmit={handleSubmit}>
             <Form.Group controlId="formPlaca">
               <Form.Label>Placa:</Form.Label>
@@ -115,24 +137,24 @@ const CadastroVeiculo = () => {
             </Form.Group>
 
             <Form.Group controlId="formCombustivel">
-            <Form.Label>Tipo de Combustível:</Form.Label>
-            <Form.Control
+              <Form.Label>Tipo de Combustível:</Form.Label>
+              <Form.Control
                 as="select"
                 name="combustivel"
                 value={formData.combustivel}
                 onChange={handleChange}
                 isInvalid={!!errors.combustivel}
-            >
+              >
                 <option value="">Selecione...</option>
                 <option value="gasolina">Gasolina</option>
                 <option value="alcool">Álcool</option>
                 <option value="diesel">Diesel</option>
                 <option value="eletrico">Elétrico</option>
                 <option value="hibrido">Híbrido</option>
-            </Form.Control>
-            <Form.Control.Feedback type="invalid">
+              </Form.Control>
+              <Form.Control.Feedback type="invalid">
                 {errors.combustivel}
-            </Form.Control.Feedback>
+              </Form.Control.Feedback>
             </Form.Group>
 
             <Form.Group controlId="formCor">
