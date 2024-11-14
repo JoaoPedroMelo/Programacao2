@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
+import React, { useState } from 'react'; 
+import { Form, Button, Container, Row, Col, Alert, ListGroup, Modal } from 'react-bootstrap';
 
 const CadastroVeiculo = () => {
+  // Estados para controle dos dados do formulário e lista de veículos
   const [formData, setFormData] = useState({
     placa: '',
     modelo: '',
@@ -12,11 +13,17 @@ const CadastroVeiculo = () => {
     renavam: '',
     combustivel: ''
   });
-
+  
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-
+  const [vehicles, setVehicles] = useState([]);  // Lista de veículos
+  const [editMode, setEditMode] = useState(false); // Flag para saber se estamos no modo de edição
+  const [editIndex, setEditIndex] = useState(null); // Índice do veículo sendo editado
+  const [showModal, setShowModal] = useState(false); // Estado para controle do modal
+  const [selectedVehicleIndex, setSelectedVehicleIndex] = useState(null); // Índice do veículo selecionado para remoção
+  
+  // Função para lidar com as mudanças nos campos do formulário
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -25,34 +32,42 @@ const CadastroVeiculo = () => {
     });
   };
 
+  // Função para validar os campos do formulário
   const validate = () => {
     let newErrors = {};
-    
     if (!formData.placa) newErrors.placa = 'A placa é obrigatória';
     if (!formData.modelo) newErrors.modelo = 'O modelo é obrigatório';
     if (!formData.marca) newErrors.marca = 'A marca é obrigatória';
-    if (!formData.anoFabricacao) {
-      newErrors.anoFabricacao = 'O ano de fabricação é obrigatório';
-    } else if (isNaN(formData.anoFabricacao) || formData.anoFabricacao < 1886 || formData.anoFabricacao > new Date().getFullYear()) {
-      newErrors.anoFabricacao = 'Ano inválido. Deve ser um número entre 1886 e o ano atual.';
+    if (!formData.anoFabricacao || isNaN(formData.anoFabricacao) || formData.anoFabricacao < 1886 || formData.anoFabricacao > new Date().getFullYear()) {
+      newErrors.anoFabricacao = 'Ano de fabricação inválido';
     }
     if (!formData.cor) newErrors.cor = 'A cor é obrigatória';
     if (!formData.chassi) newErrors.chassi = 'O chassi é obrigatório';
     if (!formData.renavam) newErrors.renavam = 'O RENAVAM é obrigatório';
     if (!formData.combustivel) newErrors.combustivel = 'O combustível é obrigatório';
-
+    
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
 
+  // Função para lidar com o envio do formulário
   const handleSubmit = (e) => {
     e.preventDefault();
+    
     if (validate()) {
-      console.log('Dados válidos:', formData);
-      // Exibe mensagem de sucesso e limpa o formulário
-      setSuccessMessage('Veículo cadastrado com sucesso!');
-      setErrorMessage('');
+      if (editMode) {
+        // Atualiza um veículo existente na lista
+        const updatedVehicles = [...vehicles];
+        updatedVehicles[editIndex] = formData;
+        setVehicles(updatedVehicles);
+        setSuccessMessage('Veículo atualizado com sucesso!');
+      } else {
+        // Adiciona um novo veículo
+        setVehicles([...vehicles, formData]);
+        setSuccessMessage('Veículo cadastrado com sucesso!');
+      }
+
+      // Limpa o formulário e desativa o modo de edição
       setFormData({
         placa: '',
         modelo: '',
@@ -63,11 +78,40 @@ const CadastroVeiculo = () => {
         renavam: '',
         combustivel: ''
       });
+      setEditMode(false);
+      setEditIndex(null);
+      setErrorMessage('');
     } else {
-      // Exibe mensagem de erro
       setSuccessMessage('');
-      setErrorMessage('Por favor, corrija os erros no formulário antes de enviar.');
+      setErrorMessage('Por favor, corrija os erros no formulário.');
     }
+  };
+
+  // Função para editar um veículo
+  const handleEdit = (index) => {
+    setFormData(vehicles[index]);
+    setEditMode(true);
+    setEditIndex(index);
+  };
+
+  // Função para abrir o modal de confirmação de remoção
+  const handleOpenModal = (index) => {
+    setSelectedVehicleIndex(index);
+    setShowModal(true);
+  };
+
+  // Função para confirmar a remoção de um veículo
+  const handleConfirmDelete = () => {
+    const updatedVehicles = vehicles.filter((_, i) => i !== selectedVehicleIndex);
+    setVehicles(updatedVehicles);
+    setShowModal(false);
+    setSuccessMessage('Veículo removido com sucesso!');
+  };
+
+  // Função para fechar o modal
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedVehicleIndex(null);
   };
 
   return (
@@ -136,27 +180,6 @@ const CadastroVeiculo = () => {
               </Form.Control.Feedback>
             </Form.Group>
 
-            <Form.Group controlId="formCombustivel">
-              <Form.Label>Tipo de Combustível:</Form.Label>
-              <Form.Control
-                as="select"
-                name="combustivel"
-                value={formData.combustivel}
-                onChange={handleChange}
-                isInvalid={!!errors.combustivel}
-              >
-                <option value="">Selecione...</option>
-                <option value="gasolina">Gasolina</option>
-                <option value="alcool">Álcool</option>
-                <option value="diesel">Diesel</option>
-                <option value="eletrico">Elétrico</option>
-                <option value="hibrido">Híbrido</option>
-              </Form.Control>
-              <Form.Control.Feedback type="invalid">
-                {errors.combustivel}
-              </Form.Control.Feedback>
-            </Form.Group>
-
             <Form.Group controlId="formCor">
               <Form.Label>Cor:</Form.Label>
               <Form.Control
@@ -199,8 +222,81 @@ const CadastroVeiculo = () => {
               </Form.Control.Feedback>
             </Form.Group>
 
-            <Button variant="primary" type="submit">Cadastrar Veículo</Button>
+            <Form.Group controlId="formCombustivel">
+              <Form.Label>Combustível:</Form.Label>
+              <Form.Control
+                as="select"
+                name="combustivel"
+                value={formData.combustivel}
+                onChange={handleChange}
+                isInvalid={!!errors.combustivel}
+              >
+                <option value="">Selecione...</option>
+                <option value="gasolina">Gasolina</option>
+                <option value="alcool">Álcool</option>
+                <option value="diesel">Diesel</option>
+                <option value="eletrico">Elétrico</option>
+                <option value="hibrido">Híbrido</option>
+              </Form.Control>
+              <Form.Control.Feedback type="invalid">
+                {errors.combustivel}
+              </Form.Control.Feedback>
+            </Form.Group>
+
+            <Button variant="primary" type="submit">
+              {editMode ? 'Atualizar Veículo' : 'Cadastrar Veículo'}
+            </Button>
           </Form>
+
+          <h3 className="mt-4">Veículos Cadastrados</h3>
+          <ListGroup>
+  {vehicles.length === 0 ? (
+    <ListGroup.Item>Nenhum veículo cadastrado.</ListGroup.Item>
+  ) : (
+    vehicles.map((vehicle, index) => (
+      <ListGroup.Item key={index}>
+        <div><strong>Modelo:</strong> {vehicle.modelo}</div>
+        <div><strong>Placa:</strong> {vehicle.placa}</div>
+        <div><strong>Marca:</strong> {vehicle.marca}</div>
+        <div><strong>Ano de Fabricação:</strong> {vehicle.anoFabricacao}</div>
+        <div><strong>Cor:</strong> {vehicle.cor}</div>
+        <div><strong>Chassi:</strong> {vehicle.chassi}</div>
+        <div><strong>Renavam:</strong> {vehicle.renavam}</div>
+        <div><strong>Combustível:</strong> {vehicle.combustivel}</div>
+        
+        <Button
+          variant="warning"
+          className="mt-2"
+          onClick={() => handleEdit(index)}
+        >
+          Editar
+        </Button>
+        <Button
+          variant="danger"
+          className="mt-2 ml-2"
+          onClick={() => handleOpenModal(index)} // Abre o modal para confirmação
+        >
+          Remover
+        </Button>
+      </ListGroup.Item>
+    ))
+  )}
+</ListGroup>
+
+          <Modal show={showModal} onHide={handleCloseModal}>
+            <Modal.Header closeButton>
+              <Modal.Title>Confirmar Remoção</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>Você tem certeza que deseja remover este veículo?</Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleCloseModal}>
+                Cancelar
+              </Button>
+              <Button variant="danger" onClick={handleConfirmDelete}>
+                Remover
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </Col>
       </Row>
     </Container>

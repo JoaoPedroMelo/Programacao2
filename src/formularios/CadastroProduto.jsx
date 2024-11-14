@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Form, Button, Alert } from 'react-bootstrap';
+import { Form, Button, Alert, Table, Modal } from 'react-bootstrap';
 
 const CadastroProduto = () => {
   const [produto, setProduto] = useState({
@@ -8,9 +8,13 @@ const CadastroProduto = () => {
     categoria: '',
     descricao: ''
   });
+  const [produtos, setProdutos] = useState([]); // Lista de produtos
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isEditing, setIsEditing] = useState(false); // Para saber se está editando ou cadastrando
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // Modal de exclusão
+  const [deleteIndex, setDeleteIndex] = useState(null); // Índice do produto a ser excluído
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,7 +32,7 @@ const CadastroProduto = () => {
     }
     if (!produto.categoria) newErrors.categoria = 'A categoria é obrigatória.';
     if (!produto.descricao) newErrors.descricao = 'A descrição é obrigatória.';
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -36,8 +40,19 @@ const CadastroProduto = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      console.log('Produto cadastrado:', produto);
-      setSuccessMessage('Produto cadastrado com sucesso!');
+      if (isEditing) {
+        // Atualizar o produto existente
+        const updatedProdutos = produtos.map((p, index) =>
+          index === deleteIndex ? produto : p
+        );
+        setProdutos(updatedProdutos);
+        setSuccessMessage('Produto atualizado com sucesso!');
+      } else {
+        // Adicionar novo produto
+        setProdutos([...produtos, produto]);
+        setSuccessMessage('Produto cadastrado com sucesso!');
+      }
+      
       setErrorMessage('');
       setProduto({
         nome: '',
@@ -45,10 +60,29 @@ const CadastroProduto = () => {
         categoria: '',
         descricao: ''
       });
+      setIsEditing(false); // Reseta o estado de edição
     } else {
       setSuccessMessage('');
       setErrorMessage('Por favor, corrija os erros no formulário antes de enviar.');
     }
+  };
+
+  const handleEdit = (index) => {
+    setProduto(produtos[index]);
+    setIsEditing(true); // Marca como edição
+    setDeleteIndex(index); // Define o índice para edição
+  };
+
+  const handleDelete = () => {
+    const updatedProdutos = produtos.filter((_, i) => i !== deleteIndex);
+    setProdutos(updatedProdutos);
+    setShowDeleteModal(false); // Fechar o modal
+    setDeleteIndex(null); // Resetar o índice de exclusão
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false); // Fechar o modal de confirmação
+    setDeleteIndex(null); // Resetar o índice de exclusão
   };
 
   return (
@@ -110,9 +144,53 @@ const CadastroProduto = () => {
           </Form.Control.Feedback>
         </Form.Group>
         <Button variant="primary" type="submit">
-          Cadastrar Produto
+          {isEditing ? 'Atualizar Produto' : 'Cadastrar Produto'}
         </Button>
       </Form>
+
+      <h3>Lista de Produtos</h3>
+      <Table striped bordered hover>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Preço</th>
+            <th>Categoria</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {produtos.map((prod, index) => (
+            <tr key={index}>
+              <td>{prod.nome}</td>
+              <td>{prod.preco}</td>
+              <td>{prod.categoria}</td>
+              <td>{prod.descricao}</td>
+              <td>
+                <Button variant="warning" onClick={() => handleEdit(index)}>Editar</Button>
+                <Button variant="danger" onClick={() => { setDeleteIndex(index); setShowDeleteModal(true); }}>Excluir</Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+
+      <Modal show={showDeleteModal} onHide={handleCancelDelete}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Exclusão</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Tem certeza de que deseja excluir este produto?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCancelDelete}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Excluir
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

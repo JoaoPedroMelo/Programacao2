@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
-import TelaCadastroVeiculos from './telas/TelaCadastroVeiculos';
 import TelaCadastroFornecedor from './telas/TelaCadastroFornecedor';
 import TelaCadastroProduto from './telas/TelaCadastroProduto';
+import TelaCadastroVeiculos from './telas/TelaCadastroVeiculos';
 import TelaLogin from './telas/TelaLogin';
 import TelaMenuInicial from './telas/TelaMenuInicial';
 import { useState } from 'react';
@@ -15,10 +15,10 @@ const App = () => {
       <Cabecalho user={user} />
       <Routes>
         <Route path="/" element={<TelaLogin setUser={setUser} />} />
-        <Route path="/menu-inicial" element={<TelaMenuInicial />} /> 
-        <Route path="/cadastro-veiculo" element={<TelaCadastroVeiculos />} />
+        <Route path="/menu-inicial" element={<TelaMenuInicial />} />
         <Route path="/cadastro-fornecedor" element={<TelaCadastroFornecedor />} />
         <Route path="/cadastro-produto" element={<TelaCadastroProduto />} />
+        <Route path="/cadastro-veiculos" element={<TelaCadastroVeiculos />} />
       </Routes>
     </div>
   );

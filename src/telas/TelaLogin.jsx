@@ -1,44 +1,48 @@
 import { useState } from 'react';
-import { Container, Form, Button, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { Form, Button, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom'; 
 
 const TelaLogin = ({ setUser }) => {
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCredentials({ ...credentials, [name]: value });
-  };
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const navigate = useNavigate(); // Inicializando o navigate
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (credentials.username === 'admin' && credentials.password === '12345') {
-      setUser(credentials.username);
-      setError('');
-      navigate('/menu-inicial'); // Redireciona para a tela de menu inicial
+    if (username === 'admin' && password === 'senha123') {
+      setUser(username);  // Armazenando o usuário logado
+      setErrorMessage('');
+      navigate('/menu-inicial'); // Redirecionando para a tela de menu inicial
     } else {
-      setError('Usuário ou senha inválidos');
+      setErrorMessage('Credenciais inválidas');
     }
   };
 
   return (
-    <Container>
-      <h1>Login</h1>
-      {error && <Alert variant="danger">{error}</Alert>}
+    <div>
+      <h2>Login</h2>
+      {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="formUsername">
-          <Form.Label>Usuário:</Form.Label>
-          <Form.Control type="text" name="username" onChange={handleChange} />
+          <Form.Label>Usuário</Form.Label>
+          <Form.Control
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
         </Form.Group>
         <Form.Group controlId="formPassword">
-          <Form.Label>Senha:</Form.Label>
-          <Form.Control type="password" name="password" onChange={handleChange} />
+          <Form.Label>Senha</Form.Label>
+          <Form.Control
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </Form.Group>
-        <Button variant="primary" type="submit">Entrar</Button>
+        <Button type="submit">Entrar</Button>
       </Form>
-    </Container>
+    </div>
   );
 };
 
